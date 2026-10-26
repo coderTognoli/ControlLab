@@ -3,7 +3,7 @@
 A interface Vite é publicada a partir de `dist/public`. `dist/index.js` é o
 servidor para hospedagem Node tradicional; não deve ser publicado como página.
 O `vercel.json` mantém essa configuração no repositório e encaminha `/api/*`
-para a função Express em `api/index.ts`. As demais rotas abrem a aplicação React.
+para a função Express em `api/index.mjs` (que carrega o bundle `dist/vercel.js`). As demais rotas abrem a aplicação React.
 
 ## Estado e configuração
 

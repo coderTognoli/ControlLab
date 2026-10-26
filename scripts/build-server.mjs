@@ -3,7 +3,7 @@
 import { build } from "esbuild";
 
 await build({
-  entryPoints: ["server/_core/index.ts"],
+  entryPoints: { index: "server/_core/index.ts", vercel: "server/_core/vercel.ts" },
   platform: "node",
   packages: "external",
   bundle: true,

@@ -2,9 +2,9 @@
 import "dotenv/config";
 import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { appRouter } from "../server/routers";
-import { createContext } from "../server/_core/context";
-import { assertServerEnv, ENV } from "../server/_core/env";
+import { appRouter } from "../routers";
+import { createContext } from "./context";
+import { assertServerEnv, ENV } from "./env";
 
 const app = express();
 app.disable("x-powered-by");
