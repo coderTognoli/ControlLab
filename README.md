@@ -110,7 +110,7 @@ Para voltar ao SQLite, use `DATABASE_PROVIDER=sqlite`. Detalhes em [`docs/BANCO_
 
 ## Deploy
 
-1. **Hospedagem**: um serviço Node.js de longa duração (Render, Railway, Fly.io…). Vercel/Netlify não servem: o servidor é Express e as imagens enviadas ficam em disco.
+1. **Hospedagem**: a interface e a API podem ser publicadas na Vercel com banco PostgreSQL externo; siga [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md) e [`docs/SUPABASE.md`](docs/SUPABASE.md). Os uploads atuais em disco ainda exigem adaptação para armazenamento persistente. Para executar tudo com disco local, use um serviço Node.js de longa duração (Render, Railway, Fly.io…).
 2. **Comandos**: build `pnpm install --prod=false && pnpm build` (o `--prod=false` garante as ferramentas de build mesmo com `NODE_ENV=production`); antes de iniciar, `pnpm db:migrate`; start `pnpm start`.
 3. **Variáveis**: `NODE_ENV=production`, `SESSION_SECRET` novo (≥ 32 caracteres), `APP_URL`, `DATABASE_PROVIDER`/`DATABASE_URL` (Supabase) ou `DATABASE_FILE` num disco persistente (SQLite), e `UPLOAD_DIR` num disco persistente. Nunca use os valores do `.env.example` em produção.
 4. **Contas reais**: `pnpm user:create -- --email ... --name "..." --role teacher` (a seed não roda em produção).

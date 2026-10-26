@@ -5,6 +5,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { assertServerEnv, ENV } from "./env";
+import { checkDatabaseConnection } from "../db";
 
 const app = express();
 app.disable("x-powered-by");
@@ -30,9 +31,17 @@ function configurationError(): string | null {
   }
 }
 
-app.get("/api/health", (_req, res) => {
+app.get("/api/health", async (_req, res) => {
   const error = configurationError();
-  res.status(error ? 503 : 200).json({ configured: !error, ...(error ? { error } : {}) });
+  if (error) {
+    res.status(503).json({ configured: false, error });
+    return;
+  }
+  const database = await checkDatabaseConnection();
+  res.status(database.ok && database.migrated ? 200 : 503).json({
+    configured: true,
+    database: { connected: database.ok, migrated: database.migrated },
+  });
 });
 
 app.use("/api/trpc", (req, res, next) => {

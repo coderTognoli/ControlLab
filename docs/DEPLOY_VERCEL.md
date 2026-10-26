@@ -15,9 +15,9 @@ o login. As operações do sistema exigem, no ambiente Production da Vercel:
 - `DATABASE_URL`: conexão do Postgres de produção, com as tabelas já migradas.
 
 Cadastre segredos diretamente na Vercel. Não os inclua no Git.
-`GET /api/health` informa somente se a configuração mínima está presente;
-não comprova conexão, migrations ou credenciais do banco. Sem configuração,
-retorna 503 com orientação, sem revelar valores de variáveis.
+`GET /api/health` verifica a configuração mínima, a conexão e a presença da
+tabela principal. Retorna 503 se algum desses passos falhar, sem revelar
+valores de variáveis. A implantação do banco está documentada em `SUPABASE.md`.
 
 O banco SQLite, a criação de contas e os uploads em disco continuam adequados
 à execução local/servidor com disco persistente. A função da Vercel não cria a
