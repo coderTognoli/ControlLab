@@ -16,9 +16,9 @@ continuam sendo verificadas pela API. `anon` e `authenticated` não podem ler ou
 gravar as tabelas diretamente. Movimentações e auditoria permitem apenas leitura
 e inserção para o backend.
 
-A migration cria o papel sem login. Sua credencial deve ser provisionada fora
-das migrations e armazenada somente no segredo `DATABASE_URL` da Vercel. A senha
-do administrador `postgres` não deve ser usada pela aplicação.
+A migration cria o papel sem login. O login foi posteriormente habilitado com
+uma senha aleatória exclusiva, provisionada fora das migrations e salva no
+segredo `DATABASE_URL` da Vercel. A senha do administrador `postgres` não é usada.
 
 ## Conexão com a Vercel
 
@@ -50,4 +50,9 @@ com o script `user:create`; a seed de demonstração não foi aplicada em produ�
 - testes de escrita revertidos na mesma transação, sem dados fictícios persistidos.
 
 Conexão de produção: pendente da obtenção do endereço do pooler no painel.
-O login no painel solicitou CAPTCHA, que deve ser concluído pelo responsável.
+O teste do endereço direto fornecido pelo Supabase falhou na Vercel com
+`ENOTFOUND`. O deploy recebe as variáveis de configuração, mas o endpoint
+`/api/health` retorna 503 com `configured=true` e `database.connected=false`.
+Esse resultado não comprova a credencial em uma conexão externa: o endereço
+do pooler ainda precisa substituir o endereço direto, seguido de novo deploy
+e testes de conexão, autenticação e gravação pela aplicação.
