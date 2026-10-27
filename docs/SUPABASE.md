@@ -1,58 +1,70 @@
 # Banco de produção do ControlLab
 
-Projeto Supabase exclusivo: `ControlLab` (`ofjcaoetqphjovhygvtr`), na organização
-`brunin dus projetu`, região São Paulo (`sa-east-1`). O projeto anterior não foi alterado.
+## Projeto escolhido
 
-## Estrutura aplicada
+O banco de produção escolhido pelo responsável é **ControlLab**, na organização
+**Senai**, referência `crenurcbsaptzenwkqnf`, em São Paulo (`sa-east-1`).
+O navegador autenticado tem acesso a esse projeto; o conector Supabase permanece
+associado a outra conta. A estrutura da Senai foi aplicada pelo SQL Editor.
 
-As migrations em `supabase/migrations/` reproduzem as versões aplicadas no
-Supabase: estrutura inicial com 15 tabelas, índices, relações, validação de saldo
-e permissões do backend. A aplicação mantém o adaptador PostgreSQL existente.
+O projeto `ofjcaoetqphjovhygvtr`, preparado anteriormente na organização pessoal,
+é um destino separado e não deve ser usado na configuração de produção da Senai.
+Ele não foi excluído nem migrado sobre o projeto escolar.
 
-O papel `controllab_app` tem acesso somente aos dados e sequências da aplicação.
-Não é superusuário, não cria bancos ou papéis e não ignora RLS. Suas políticas
-autorizam o backend confiável; as permissões de aluno, docente e administração
-continuam sendo verificadas pela API. `anon` e `authenticated` não podem ler ou
-gravar as tabelas diretamente. Movimentações e auditoria permitem apenas leitura
-e inserção para o backend.
+## Estrutura aplicada na Senai
 
-A migration cria o papel sem login. O login foi posteriormente habilitado com
-uma senha aleatória exclusiva, provisionada fora das migrations e salva no
-segredo `DATABASE_URL` da Vercel. A senha do administrador `postgres` não é usada.
+A inspeção inicial encontrou zero tabelas em `public`. Foi aplicada a estrutura
+equivalente à migration `20261026224833_controllab_estrutura_inicial.sql`:
+15 tabelas, índices, relações, geração de IDs e validações de saldo. Todas as
+15 tabelas têm RLS ativado. `anon` e `authenticated` não recebem acesso direto.
+A aplicação continua usando a autenticação e o adaptador PostgreSQL existentes.
 
-## Conexão com a Vercel
+Os testes de inserção de usuário e item, geração de identificadores e rejeição
+de reserva maior que o estoque passaram. A transação de teste foi revertida:
+o resultado final confirmou 15 tabelas com RLS, zero usuários persistidos e
+permissões SELECT negadas a `anon` e `authenticated` na tabela de usuários.
+Não foram criadas contas com senhas de demonstração em produção.
 
-Use o endereço exato exibido no painel **Connect → Transaction pooler** e o
-usuário dedicado `controllab_app.<referência-do-projeto>`. A biblioteca `pg`
-existente não usa prepared statements nomeados. Configure em Production:
+## Acesso do backend
 
-- `DATABASE_PROVIDER=postgres`;
-- `DATABASE_URL`: conexão com a credencial exclusiva do backend;
-- `DATABASE_SSL=verify`, usando a cadeia de certificados do serviço;
-- `SESSION_SECRET`: já provisionado como segredo na Vercel.
+A migration `20261026225247_acesso_backend_controllab.sql` contém o papel
+`controllab_app` e as permissões planejadas. No projeto Senai, essa etapa e a
+credencial exclusiva de produção ainda precisam ser concluídas.
 
-Se o certificado exigir uma CA específica, configure a CA antes de ativar a
-validação. Não publique credenciais, URLs com senha ou certificados privados no Git.
+O papel não será superusuário, não criará bancos ou papéis e não ignorará RLS.
+Ele receberá acesso somente às tabelas e sequências da aplicação. Movimentações
+e auditoria permitirão somente leitura e inserção. As permissões de aluno,
+docente e administração continuam verificadas na API.
 
-`GET /api/health` verifica configuração, conexão e presença da tabela principal.
-Retorna 200 somente quando todos esses passos passam e não revela endereço,
-usuário ou senha do banco. A autenticação real ainda exige contas cadastradas
-com o script `user:create`; a seed de demonstração não foi aplicada em produção.
+A senha será provisionada fora do Git e das migrations, e armazenada somente
+como segredo de Production na Vercel. A senha do administrador `postgres`
+não deve ser usada pelo backend.
 
-## Verificações realizadas na criação
+## Conexão e certificado
 
-- 15 tabelas com RLS ativado;
-- inserção de usuário e item com o papel do backend, incluindo geração de IDs;
-- rejeição de reserva maior que o estoque físico;
-- bloqueio de alteração/exclusão dos históricos pelo backend;
-- ausência de acesso direto de `anon` e `authenticated` às tabelas de usuários;
-- análise de segurança Supabase sem alertas;
-- testes de escrita revertidos na mesma transação, sem dados fictícios persistidos.
+O painel da Senai confirmou o Transaction pooler:
 
-Conexão de produção: pendente da obtenção do endereço do pooler no painel.
-O teste do endereço direto fornecido pelo Supabase falhou na Vercel com
-`ENOTFOUND`. O deploy recebe as variáveis de configuração, mas o endpoint
-`/api/health` retorna 503 com `configured=true` e `database.connected=false`.
-Esse resultado não comprova a credencial em uma conexão externa: o endereço
-do pooler ainda precisa substituir o endereço direto, seguido de novo deploy
-e testes de conexão, autenticação e gravação pela aplicação.
+- Host: `aws-1-sa-east-1.pooler.supabase.com`;
+- Porta: `6543`;
+- Banco: `postgres`;
+- Usuário do backend: `controllab_app.crenurcbsaptzenwkqnf`.
+
+Configure `DATABASE_PROVIDER=postgres`, `DATABASE_SSL=verify` e
+`DATABASE_SSL_CA=certificados/supabase-prod-ca-2021.crt`. O certificado público
+foi obtido pelo link Download certificate do painel Supabase. Está válido até
+26/04/2031 e é incluído no pacote da função pelo `vercel.json`.
+
+SHA-256 do certificado:
+`807025AD50D4ED219D2C9C7D299C004F824EB00CF7F65AFEF607D07B72E6CAFA`.
+
+A biblioteca `pg` não usa prepared statements nomeados. Nenhuma chave privada,
+senha ou URL com senha deve entrar no repositório.
+
+## Estado da conexão
+
+A estrutura está aplicada e validada no projeto Senai. O acesso de produção
+pela Vercel ainda está pendente da criação da credencial exclusiva do backend.
+`GET /api/health` deve retornar 200 somente depois de validar configuração,
+conexão e tabela principal. A configuração de destino não deve reutilizar a
+credencial do projeto pessoal. Contas reais e os fluxos autenticados serão
+verificados depois de concluir a conexão.
