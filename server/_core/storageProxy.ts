@@ -1,12 +1,12 @@
 import express, { type Express } from "express";
-import { mkdirSync } from "node:fs";
 import { attachmentExtension, INLINE_ATTACHMENT_EXTENSIONS } from "@shared/attachments";
 import { getUploadRoot } from "../storage";
 
 /** Serve os arquivos enviados (somente leitura, sem listagem de diretório). */
 export function registerStorageProxy(app: Express) {
   const root = getUploadRoot();
-  mkdirSync(root, { recursive: true });
+  // Servir arquivos nao deve criar diretorios: o deploy pode ser somente leitura.
+  // storagePut cria o diretorio quando ha uma gravacao em hospedagem com disco.
   app.use(
     "/uploads",
     express.static(root, {
