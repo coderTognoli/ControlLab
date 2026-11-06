@@ -4,8 +4,11 @@ O deploy auditado em 06/11/2026 publica o Vite, mas devolve 404 NOT_FOUND da
 plataforma em `/api/trpc/system.health`. A requisicao nao chega ao Express nem
 ao PostgreSQL; atualizar o schema do banco nao publica o backend.
 
-`api/index.ts` exporta a aplicacao Express compartilhada com o servidor local,
-sem abrir uma porta nem carregar o Vite. `vercel.json` encaminha `/api/*` para
+`server/vercel.ts` exporta a aplicacao Express compartilhada com o servidor local,
+sem abrir uma porta nem carregar o Vite. O build empacota essa entrada em
+`dist/vercel-api.js`, carregado por `api/index.js` com extensao explicita.
+Assim o Node ESM nao precisa resolver imports sem extensao ou aliases TypeScript
+em producao. `vercel.json` inclui o bundle na Function e encaminha `/api/*` para
 essa Function e serve o frontend em `dist/public`; rotas da interface recebem
 `index.html`. O caminho completo e o query string devem chegar ao Express,
 inclusive chamadas tRPC em lote. A leitura de uploads nao cria diretorios no
@@ -13,10 +16,13 @@ inicio da Function, pois o filesystem do deploy e somente leitura.
 
 ## Publicar e conferir
 
-1. Incluir `api/index.ts`, `vercel.json`, `server/_core/app.ts`, a refatoracao de
-   `server/_core/index.ts`, a alteracao de `server/_core/storageProxy.ts` e
-   `tsconfig.json` no commit a publicar. Teste HTTP: `server/vercel-api.test.ts`.
-2. No projeto `controllab` da equipe `brun1nns-projects`, usar a raiz do
+1. Incluir `api/index.js`, `server/vercel.ts`, `scripts/build-server.mjs`,
+   `vercel.json` e as alteracoes do backend compartilhado no commit a publicar.
+   Remover a antiga entrada `api/index.ts`. `dist/` continua gerado pelo build,
+   fora do Git. Teste HTTP: `server/vercel-api.test.ts`. Depois de `pnpm build`,
+   executar `node scripts/verify-vercel-bundle.mjs` para testar tambem a entrada
+   compilada com o carregador ESM nativo, sem fontes TypeScript na copia de teste.
+2. No projeto da Vercel associado ao dominio acessado, usar a raiz do
    repositorio, framework Vite, Node 24, build `pnpm build` e output `dist/public`.
 3. Configurar no ambiente que sera publicado `NODE_ENV=production`,
    `DATABASE_PROVIDER=postgres`, `DATABASE_URL` do **banco existente atualizado**,

@@ -1,6 +1,5 @@
 {
   "include": [
-    "api/**/*.ts",
     "client/src/**/*",
     "shared/**/*",
     "server/**/*",

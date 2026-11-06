@@ -15,3 +15,17 @@ await build({
   banner: { js: 'process.env.NODE_ENV ??= "production";' },
   logLevel: "info",
 });
+
+// A Function precisa de um bundle proprio: Node ESM nao resolve os imports
+// sem extensao nem os aliases TypeScript usados nos fontes do servidor.
+await build({
+  entryPoints: ["server/vercel.ts"],
+  platform: "node",
+  packages: "external",
+  bundle: true,
+  format: "esm",
+  outfile: "dist/vercel-api.js",
+  define: { "process.env.NODE_ENV": '"production"' },
+  banner: { js: 'process.env.NODE_ENV ??= "production";' },
+  logLevel: "info",
+});
